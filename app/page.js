@@ -14,6 +14,9 @@ const EMAILJS_SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
 const EMAILJS_TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
 const MP_PUBLIC_KEY = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
 
+// --- FALLBACK DE IMÁGENES ---
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=800";
+
 // --- DATOS DE PRODUCTOS ---
 const PRODUCTOS = [
   {
@@ -137,13 +140,17 @@ const PRODUCTOS = [
   { id: "prod_07", nombre: "Puzzles Personalizados", precio: 6990, esPersonalizable: true, tieneMayorista: false, imagen: "/rompe.jpg", descripcion: "Tus fotos favoritas en un rompecabezas." },
 ];
 
+const handleImgError = (e) => {
+  e.target.src = FALLBACK_IMAGE;
+};
+
 // --- COMPONENTES ---
 
 const Navbar = ({ onNavigate, vistaActiva }) => (
   <nav className="fixed top-0 left-0 right-0 z-50 bg-[#fbeeca] backdrop-blur-xl border-b border-amber-100 h-20 shadow-sm">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex justify-between items-center">
       <div onClick={() => onNavigate('home')} className="flex items-center cursor-pointer">
-        <img src="/sparkup_icono.png" alt="Logo" className="h-16 w-auto object-contain transition-transform hover:scale-105" />
+        <img src="/sparkup_icono.png" alt="Logo" className="h-30 w-auto object-contain transition-transform hover:scale-105" onError={handleImgError} />
       </div>
       <div className="flex items-center gap-6 sm:gap-8">
         <button onClick={() => onNavigate('home')} className={`text-sm font-black uppercase tracking-wider transition-colors ${vistaActiva === 'home' || vistaActiva === 'personalizar' ? 'text-pink-400' : 'text-black hover:text-pink-500'}`}>Inicio</button>
@@ -154,15 +161,62 @@ const Navbar = ({ onNavigate, vistaActiva }) => (
 );
 
 const SobreNosotros = () => (
-  <div className="space-y-16 py-10 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-x-hidden px-4">
+  <div className="space-y-24 py-10 animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-x-hidden px-4">
+    {/* SECCIÓN HISTORIA */}
     <section className="grid lg:grid-cols-2 gap-12 items-center">
       <div className="space-y-6">
         <span className="px-4 py-2 bg-pink-50 text-pink-500 rounded-full text-xs font-black uppercase tracking-widest">Nuestra Historia</span>
         <h2 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight">Pasión por el detalle, <br /><span className="text-pink-400">calidad garantizada</span>.</h2>
-        <p className="text-lg text-slate-500 leading-relaxed font-medium">En SparkUp nos dedicamos a transformar tus ideas en productos tangibles de alta calidad con envíos a todo Chile.</p>
+        <p className="text-lg text-slate-500 leading-relaxed font-medium">En SparkUp nos dedicamos a transformar tus ideas en productos tangibles de alta calidad.</p>
       </div>
       <div className="relative aspect-video sm:aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white">
-        <img src="/team.jpg" className="w-full h-full object-cover" alt="Nuestro Equipo" />
+        <img src="/team.jpg" className="w-full h-full object-cover" alt="Nuestro Equipo" onError={handleImgError} />
+      </div>
+    </section>
+
+    {/* SECCIÓN REDES SOCIALES */}
+    <section className="space-y-12 bg-white/50 py-16 rounded-[3rem] border border-slate-100">
+      <div className="text-center space-y-4 max-w-2xl mx-auto px-6">
+        <h3 className="text-3xl font-black italic uppercase tracking-tighter">Únete a nuestra comunidad</h3>
+        <p className="text-slate-400 font-bold text-sm tracking-wide">Síguenos para ver nuestros últimos trabajos, promociones y el día a día en el taller.</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto px-6">
+        {/* INSTAGRAM */}
+        <a 
+          href="https://www.instagram.com/sparkup_cl/?__pwa=1" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group relative bg-white p-8 rounded-[2.5rem] shadow-lg hover:shadow-2xl transition-all duration-500 flex items-center gap-6 overflow-hidden border border-slate-50"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-400/10 to-purple-600/10 rounded-bl-full group-hover:scale-110 transition-transform duration-700" />
+          <div className="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-4 rounded-2xl text-white shadow-xl group-hover:rotate-6 transition-transform">
+            <Instagram size={32} />
+          </div>
+          <div className="relative">
+            <h4 className="text-xl font-black">Instagram</h4>
+            <p className="text-slate-400 font-bold text-sm">@sparkup_cl</p>
+          </div>
+          <ArrowRight className="ml-auto text-slate-200 group-hover:text-pink-400 transition-colors" />
+        </a>
+
+        {/* TIKTOK */}
+        <a 
+          href="https://www.tiktok.com/@sparkup_cl" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group relative bg-white p-8 rounded-[2.5rem] shadow-lg hover:shadow-2xl transition-all duration-500 flex items-center gap-6 overflow-hidden border border-slate-50"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-slate-900/5 rounded-bl-full group-hover:scale-110 transition-transform duration-700" />
+          <div className="bg-slate-900 p-4 rounded-2xl text-white shadow-xl group-hover:-rotate-6 transition-transform">
+            <Music2 size={32} />
+          </div>
+          <div className="relative">
+            <h4 className="text-xl font-black">TikTok</h4>
+            <p className="text-slate-400 font-bold text-sm">@sparkup_oficial</p>
+          </div>
+          <ArrowRight className="ml-auto text-slate-200 group-hover:text-pink-400 transition-colors" />
+        </a>
       </div>
     </section>
   </div>
@@ -171,7 +225,7 @@ const SobreNosotros = () => (
 const ProductCard = ({ producto, onSelect }) => (
   <div className="group bg-[#FEFAEF] rounded-[2.5rem] p-4 border border-slate-100 hover:border-pink-200 hover:shadow-2xl transition-all duration-500 w-full overflow-hidden box-border">
     <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-slate-100">
-      <img src={producto.imagen} alt={producto.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+      <img src={producto.imagen} alt={producto.nombre} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={handleImgError} />
       {producto.tieneMayorista && (
         <div className="absolute top-4 right-4 bg-pink-400 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">DISPONIBLE MAYORISTA</div>
       )}
@@ -311,7 +365,7 @@ const Customizer = ({ producto, onBack }) => {
         <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 md:sticky top-24">
           <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-slate-50"
                style={esPolera ? { backgroundColor: `${colorSeleccionado?.hex}15` } : {}}>
-            <img src={(!producto.esPersonalizable && disenoSeleccionado) ? disenoSeleccionado.imagen : producto.imagen} className="w-full h-full object-cover" alt={producto.nombre} />
+            <img src={(!producto.esPersonalizable && disenoSeleccionado) ? disenoSeleccionado.imagen : producto.imagen} className="w-full h-full object-cover" alt={producto.nombre} onError={handleImgError} />
           </div>
         </div>
 
@@ -354,7 +408,6 @@ const Customizer = ({ producto, onBack }) => {
               </div>
             </div>
 
-            {/* Galería de diseños para productos Estándar */}
             {!producto.esPersonalizable && producto.disenos && (
                <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
@@ -367,7 +420,7 @@ const Customizer = ({ producto, onBack }) => {
                            onClick={() => setDisenoSeleccionado(diseno)}
                            className={`cursor-pointer group relative rounded-2xl overflow-hidden border-4 transition-all ${disenoSeleccionado?.id === diseno.id ? 'border-pink-400 scale-[1.02] shadow-xl' : 'border-white hover:border-slate-100'}`}
                         >
-                           <img src={diseno.imagen} alt={diseno.nombre} className="w-full aspect-square object-cover" />
+                           <img src={diseno.imagen} alt={diseno.nombre} className="w-full aspect-square object-cover" onError={handleImgError} />
                            <div className={`absolute bottom-0 left-0 right-0 p-2 text-center text-[10px] font-black uppercase tracking-widest transition-colors ${disenoSeleccionado?.id === diseno.id ? 'bg-pink-400 text-white' : 'bg-white/90 text-slate-900 group-hover:bg-slate-100'}`}>
                               {diseno.nombre}
                            </div>
@@ -530,7 +583,7 @@ export default function App() {
                 Imprenta y Diseño SparkUp
               </div>
               <h2 className="text-5xl md:text-7xl font-black tracking-tight leading-[1.1] italic">Damos vida a tus <span className="text-pink-400">ideas</span></h2>
-              <p className="text-xl text-slate-400 mt-6 leading-relaxed font-medium">Desde 1 unidad hasta pedidos mayoristas. Personaliza tu estilo con la mejor calidad de Chile.</p>
+              <p className="text-xl text-slate-400 mt-6 leading-relaxed font-medium">Elige tu base favorita y crea algo único hoy mismo.</p>
             </header>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -549,7 +602,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="text-2xl font-black italic tracking-tighter uppercase">SparkUp</span>
           </div>
-          <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest">© 2026 SparkUp Chile - Todos los derechos reservados.</div>
+          <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest">© 2026 SparkUp - Todos los derechos reservados.</div>
         </div>
       </footer>
     </div>
