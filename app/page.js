@@ -564,7 +564,7 @@ export default function App() {
         {vista === 'home' && (
           <div className="space-y-16 animate-in fade-in duration-700">
             <header className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-50 text-pink-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">Imprenta y Diseño SparkUp</div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-50 text-pink-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">Diseño SparkUp</div>
               <h2 className="text-5xl md:text-7xl font-black leading-[1.1] italic">Damos vida a tus <span className="text-pink-400">ideas</span></h2>
               <p className="text-xl text-slate-400 mt-6 leading-relaxed font-medium">Personaliza cada detalle de tus productos favoritos hoy mismo.</p>
             </header>
