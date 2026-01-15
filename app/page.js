@@ -31,9 +31,9 @@ const PRODUCTOS = [
     esPersonalizable: true,
     estilosDisponibles: ["Hombre", "Mujer", "Oversize"],
     tallasPorEstilo: {
-      "Hombre": ["S (46x69)", "M (51x71)", "L (56x74)", "XL (61x76)"],
+      "Hombre": ["S (46x69)", "M (51x71)", "L (56x74)", "XL (61x76)", "2XL (66x78)"],
       "Mujer": ["S (43x62)", "M (47x64)", "L (51x56)", "XL (54x68)"],
-      "Oversize": ["Talla Única M/L (60x75)", "XL Oversize (65x80)"]
+      "Oversize": ["S (58x69)", "M (62x71)", "L (65x74)", "XL (68x76)", "2XL (72x78)"]
     },
     coloresPorEstilo: {
       "Hombre": [
@@ -85,10 +85,12 @@ const PRODUCTOS = [
         { nombre: "Salmón", hex: "#d85c60", imagen: "/polera_am/salmon.png" },
       ],
       "Oversize": [
-        { nombre: "Negro", hex: "#000000", imagen: "/polera_ao/negro.png" },
-        { nombre: "Blanco", hex: "#ffffff", imagen: "/polera_ao/blanco.png" },
-        { nombre: "Gris Melange", hex: "#acafb8", imagen: "/polera_ao/gris_melange.png" },
-        { nombre: "Beige", hex: "#b4a07b", imagen: "/polera_ao/beige.png" }
+        { nombre: "Negro", hex: "#000000", imagen: "/polera_o/negro.png" },
+        { nombre: "Blanco", hex: "#ffffff", imagen: "/polera_o/blanco.png" },
+        { nombre: "Gris Melange", hex: "#acafb8", imagen: "/polera_o/gris_melange.png" },
+        { nombre: "Azul Marino", hex: "#001a41", imagen: "/polera_o/azul_marino.png" },
+        { nombre: "Hueso", hex: "#f1ebdb", imagen: "/polera_o/hueso.png" },
+        { nombre: "Cielo", hex: "#bfdff2", imagen: "/polera_o/cielo.png" },
       ]
     },
     disenosEstandar: [
@@ -142,31 +144,36 @@ const PRODUCTOS = [
     esPersonalizable: true,
     tieneMayorista: true,
     imagen: "/totebag.jpg",
-    descripcion: "Biodegradable, ligera, reutilizable. Perfecta para personalizar."
+    descripcion: "Biodegradable, ligera, reutilizable. Perfecta para personalizar.",
+    disenosEstandar: [
+      { id: "tb1", nombre: "Aloha", imagen: "/estandar/aloha.jpeg" },
+      { id: "tb2", nombre: "Summer Vacance Mood", imagen: "/estandar/summer.jpeg" },
+      { id: "tb3", nombre: "Wimbledon", imagen: "/estandar/wimbledon.jpeg" },
+      { id: "tb4", nombre: "Sol", imagen: "/estandar/sol.jpeg" }
+    ]
   },
   {
     id: "prod_04",
-    nombre: "Vasos Térmicos",
+    nombre: "Vasos",
     precio: 8000,
     esPersonalizable: true,
     imagen: "/vasos.jpg",
     descripcion: "Mantén tu bebida a la temperatura ideal con estilo propio.",
     disenosEstandar: [
-      { id: "v1", nombre: "Galaxia", imagen: "/vasos_galaxia.jpg" },
-      { id: "v2", nombre: "Abstracto Moderno", imagen: "/vasos_abstracto.jpg" }
+      { id: "v1", nombre: "Monstera", imagen: "/estandar/monstera.png" },
+      { id: "v2", nombre: "Dog Mom", imagen: "/estandar/dogmom.png" },
+      { id: "v3", nombre: "Books and Coffee", imagen: "/estandar/bac.png" }
     ]
   },
   {
     id: "prod_05",
-    nombre: "Puzzles Spark",
+    nombre: "Puzzles",
     precio: 4000,
     esPersonalizable: true,
     imagen: "/rompe.jpg",
-    descripcion: "Tus momentos favoritos o diseños artísticos para armar.",
-    disenosEstandar: [
-      { id: "p1", nombre: "Ciudad de Noche", imagen: "/puzzle_ciudad.jpg" },
-      { id: "p2", nombre: "Bosque Mágico", imagen: "/puzzle_bosque.jpg" }
-    ]
+    descripcion: "Tus momentos favoritos o diseños artísticos para armar. Totalmente personalizable.",
+    // Eliminada la opción estándar de Puzzles
+    disenosEstandar: []
   }
 ];
 
@@ -180,7 +187,7 @@ const Navbar = ({ onNavigate, vistaActiva }) => (
   <nav className="fixed top-0 left-0 right-0 z-50 bg-[#fbeeca] backdrop-blur-xl border-b border-amber-100 h-20 shadow-sm">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex justify-between items-center">
       <div onClick={() => onNavigate('home')} className="flex items-center cursor-pointer">
-        <img src="/sparkup_icono.png" alt="Logo" className="h-20 w-auto object-contain transition-transform hover:scale-105" onError={handleImgError} />
+        <img src="/sparkup_icono.png" alt="Logo" className="h-30 w-auto object-contain transition-transform hover:scale-105" onError={handleImgError} />
       </div>
       <div className="flex items-center gap-6 sm:gap-8">
         <button onClick={() => onNavigate('home')} className={`text-sm font-black uppercase tracking-wider transition-colors ${vistaActiva === 'home' || vistaActiva === 'personalizar' ? 'text-pink-400' : 'text-black hover:text-pink-500'}`}>Inicio</button>
@@ -252,12 +259,14 @@ const Customizer = ({ producto, onBack }) => {
   const [texto, setTexto] = useState("");
   const [cantidad, setCantidad] = useState(1);
 
-  // Estilo actual (Hombre/Mujer/Oversize/Niño/Niña)
+  const tieneDisenosEstandar = producto.disenosEstandar && producto.disenosEstandar.length > 0;
+
+  // Estilo actual (Hombre/Mujer/Oversize/Unisex)
   const [estiloSeleccionado, setEstiloSeleccionado] = useState(producto.estilosDisponibles ? producto.estilosDisponibles[0] : null);
-  const [modoPersonalizacion, setModoPersonalizacion] = useState(producto.esPersonalizable ? "personalizada" : "estandar");
+  const [modoPersonalizacion, setModoPersonalizacion] = useState(tieneDisenosEstandar ? "estandar" : "personalizada");
   const [disenoSeleccionado, setDisenoSeleccionado] = useState(null);
 
-  // Colores dinámicos: Diferencia entre adultos (separados) y otros (unificados)
+  // Colores dinámicos
   const getColoresActuales = () => {
     if (producto.coloresPorEstilo && estiloSeleccionado) {
       return producto.coloresPorEstilo[estiloSeleccionado];
@@ -276,11 +285,9 @@ const Customizer = ({ producto, onBack }) => {
 
   const [tallaSeleccionada, setTallaSeleccionada] = useState(getTallasActuales()[0] || null);
 
-  // Efecto para sincronizar talla y color al cambiar estilo
   useEffect(() => {
     const nuevosColores = getColoresActuales();
     const nuevasTallas = getTallasActuales();
-
     setColorSeleccionado(nuevosColores[0] || null);
     setTallaSeleccionada(nuevasTallas[0] || null);
   }, [estiloSeleccionado, producto]);
@@ -295,15 +302,13 @@ const Customizer = ({ producto, onBack }) => {
   const getPrecioUnitario = () => esMayorista ? producto.precioMayorista : producto.precio;
   const precioTotal = getPrecioUnitario() * cantidad;
 
-  // Lógica de visualización
   const mostrarPersonalizacion = modoPersonalizacion === "personalizada";
-  const mostrarGaleriaDisenos = modoPersonalizacion === "estandar" && (producto.disenosEstandar || producto.disenos);
-  const listaDisenos = producto.disenosEstandar || producto.disenos;
+  const mostrarGaleriaDisenos = modoPersonalizacion === "estandar" && tieneDisenosEstandar;
+  const listaDisenos = producto.disenosEstandar;
 
   const ocultarSelectorColor = modoPersonalizacion === "estandar";
   const esRopa = producto.esPolera;
 
-  // PREVIEW DINÁMICA
   const getPreviewImage = () => {
     if (!mostrarPersonalizacion && disenoSeleccionado) return disenoSeleccionado.imagen;
     if (mostrarPersonalizacion && colorSeleccionado?.imagen) return colorSeleccionado.imagen;
@@ -364,15 +369,17 @@ const Customizer = ({ producto, onBack }) => {
       </button>
 
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-        {/* LADO IZQUIERDO: PREVIEW DINÁMICA MEJORADA */}
-        <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 md:sticky top-24 overflow-hidden">
-          <div className="relative aspect-square rounded-[2rem] overflow-hidden bg-[#f9f9f9] flex items-center justify-center">
+        {/* LADO IZQUIERDO: PREVIEW DINÁMICA MEJORADA - SIN FONDO NI MARCA */}
+        <div className={`p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 md:sticky top-24 overflow-hidden transition-colors ${esRopa ? 'bg-white' : 'bg-[#f9f9f9]'}`}>
+          <div className="relative aspect-square rounded-[2rem] overflow-hidden flex items-center justify-center">
             <img
               src={getPreviewImage()}
-              className="max-w-[95%] max-h-[95%] object-contain transition-all duration-700 ease-out"
+              className="max-w-[90%] max-h-[90%] object-contain transition-all duration-700 ease-out"
               alt={producto.nombre}
               onError={handleImgError}
             />
+            {/* Overlay sutil para dar profundidad solo a prendas */}
+            {esRopa && <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/[0.02]" />}
           </div>
         </div>
 
@@ -387,7 +394,8 @@ const Customizer = ({ producto, onBack }) => {
           </div>
 
           <div className="space-y-6">
-            {producto.esPersonalizable && (
+            {/* Se añade lógica para que la casilla de opciones solo aparezca si hay algo que configurar (estilos o catálogo) */}
+            {producto.esPersonalizable && (producto.estilosDisponibles || tieneDisenosEstandar) && (
               <div className="space-y-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
                 {producto.estilosDisponibles && (
                   <div className="space-y-3 pb-4 border-b border-slate-200">
@@ -401,19 +409,22 @@ const Customizer = ({ producto, onBack }) => {
                     </div>
                   </div>
                 )}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2"><Tag size={12} /> Personalización</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => setModoPersonalizacion("personalizada")} className={`py-4 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${modoPersonalizacion === "personalizada" ? 'border-pink-400 bg-pink-50 shadow-inner shadow-pink-100/50' : 'border-slate-100 bg-white'}`}>
-                      <ImageIcon size={20} className={modoPersonalizacion === "personalizada" ? "text-pink-500" : "text-slate-300"} />
-                      <span className={`text-[10px] font-black uppercase ${modoPersonalizacion === "personalizada" ? "text-pink-500" : "text-slate-400"}`}>A mi gusto</span>
-                    </button>
-                    <button onClick={() => setModoPersonalizacion("estandar")} className={`py-4 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${modoPersonalizacion === "estandar" ? 'border-pink-400 bg-pink-50 shadow-inner shadow-pink-100/50' : 'border-slate-100 bg-white'}`}>
-                      <Palette size={20} className={modoPersonalizacion === "estandar" ? "text-pink-500" : "text-slate-300"} />
-                      <span className={`text-[10px] font-black uppercase ${modoPersonalizacion === "estandar" ? "text-pink-500" : "text-slate-400"}`}>Del Catálogo</span>
-                    </button>
+                
+                {tieneDisenosEstandar && (
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center gap-2"><Tag size={12} /> Personalización</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={() => setModoPersonalizacion("personalizada")} className={`py-4 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${modoPersonalizacion === "personalizada" ? 'border-pink-400 bg-pink-50 shadow-inner shadow-pink-100/50' : 'border-slate-100 bg-white'}`}>
+                        <ImageIcon size={20} className={modoPersonalizacion === "personalizada" ? "text-pink-500" : "text-slate-300"} />
+                        <span className={`text-[10px] font-black uppercase ${modoPersonalizacion === "personalizada" ? "text-pink-500" : "text-slate-400"}`}>A mi gusto</span>
+                      </button>
+                      <button onClick={() => setModoPersonalizacion("estandar")} className={`py-4 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${modoPersonalizacion === "estandar" ? 'border-pink-400 bg-pink-50 shadow-inner shadow-pink-100/50' : 'border-slate-100 bg-white'}`}>
+                        <Palette size={20} className={modoPersonalizacion === "estandar" ? "text-pink-500" : "text-slate-300"} />
+                        <span className={`text-[10px] font-black uppercase ${modoPersonalizacion === "estandar" ? "text-pink-500" : "text-slate-400"}`}>Del Catálogo</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -441,8 +452,8 @@ const Customizer = ({ producto, onBack }) => {
               {esRopa && (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex justify-between">
-                    Talla Disponible
-                    {producto.esPolera && <span className="text-pink-400 font-black italic">{estiloSeleccionado}</span>}
+                     Talla Disponible
+                     {producto.esPolera && <span className="text-pink-400 font-black italic">{estiloSeleccionado}</span>}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {getTallasActuales().map(t => (
