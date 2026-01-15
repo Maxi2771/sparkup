@@ -22,7 +22,7 @@ const PRODUCTOS = [
   {
     id: "prod_01",
     nombre: "Poleras para adultos",
-    precio: 9990,
+    precio: 50,
     precioMayorista: 7990,
     imagen: "/polera.png",
     descripcion: "Disponible en corte Hombre, Mujer y Oversize. Elige entre diseños estándar o personaliza la tuya.",
