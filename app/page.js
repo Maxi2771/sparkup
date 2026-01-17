@@ -6,7 +6,7 @@ import {
   ArrowRight, Plus, Minus, Star, Zap, ShieldCheck, Truck, X,
   Palette, Image as ImageIcon, Tag, User, Ruler, Instagram,
   Music2, MapPin, Globe, Check, AlertCircle, Mail, Shirt,
-  Coffee, Puzzle, Baby
+  Coffee, Puzzle, Baby, Loader2
 } from 'lucide-react';
 
 // --- CONFIGURACIÓN DE VARIABLES DE ENTORNO ---
@@ -22,7 +22,7 @@ const PRODUCTOS = [
   {
     id: "prod_01",
     nombre: "Poleras para adultos",
-    precio: 50,
+    precio: 200,
     precioMayorista: 7990,
     imagen: "/polera.png",
     descripcion: "Disponible en corte Hombre, Mujer y Oversize. Elige entre diseños estándar o personaliza la tuya.",
@@ -126,7 +126,7 @@ const PRODUCTOS = [
       { nombre: "Fucsia", hex: "#ff4578", imagen: "/polera_n/fucsia.png" },
       { nombre: "Rosado", hex: "#fccacd", imagen: "/polera_n/rosado.png" },
       { nombre: "Calipso (Aqua)", hex: "#70e9ff", imagen: "/polera_n/calipso.png" },
-      { nombre: "Morado", hex: "#550045", imagen: "/polera_n/morado.png" },
+      { nombre: "Morado", hex: "#550045", imagen: "/polera_am/morado.png" },
       { nombre: "Verde Limon", hex: "#7fd700", imagen: "/polera_n/verde_limon.png" }
     ],
     disenosEstandar: [
@@ -172,7 +172,6 @@ const PRODUCTOS = [
     esPersonalizable: true,
     imagen: "/rompe.jpg",
     descripcion: "Tus momentos favoritos o diseños artísticos para armar. Totalmente personalizable.",
-    // Eliminada la opción estándar de Puzzles
     disenosEstandar: []
   }
 ];
@@ -261,12 +260,10 @@ const Customizer = ({ producto, onBack }) => {
 
   const tieneDisenosEstandar = producto.disenosEstandar && producto.disenosEstandar.length > 0;
 
-  // Estilo actual (Hombre/Mujer/Oversize/Unisex)
   const [estiloSeleccionado, setEstiloSeleccionado] = useState(producto.estilosDisponibles ? producto.estilosDisponibles[0] : null);
   const [modoPersonalizacion, setModoPersonalizacion] = useState(tieneDisenosEstandar ? "estandar" : "personalizada");
   const [disenoSeleccionado, setDisenoSeleccionado] = useState(null);
 
-  // Colores dinámicos
   const getColoresActuales = () => {
     if (producto.coloresPorEstilo && estiloSeleccionado) {
       return producto.coloresPorEstilo[estiloSeleccionado];
@@ -276,7 +273,6 @@ const Customizer = ({ producto, onBack }) => {
 
   const [colorSeleccionado, setColorSeleccionado] = useState(getColoresActuales()[0] || null);
 
-  // Tallas dinámicas
   const getTallasActuales = () => {
     if (producto.esPolera && estiloSeleccionado) return producto.tallasPorEstilo[estiloSeleccionado];
     if (producto.tallasDisponibles) return producto.tallasDisponibles;
@@ -305,7 +301,6 @@ const Customizer = ({ producto, onBack }) => {
   const mostrarPersonalizacion = modoPersonalizacion === "personalizada";
   const mostrarGaleriaDisenos = modoPersonalizacion === "estandar" && tieneDisenosEstandar;
   const listaDisenos = producto.disenosEstandar;
-
   const ocultarSelectorColor = modoPersonalizacion === "estandar";
   const esRopa = producto.esPolera;
 
@@ -320,43 +315,60 @@ const Customizer = ({ producto, onBack }) => {
       setErrorPago("Faltan datos de contacto.");
       return;
     }
+
+    if (!window.MercadoPago) {
+      setErrorPago("Cargando servicios de pago, espera un segundo...");
+      return;
+    }
+
     setCargando(true);
     setErrorPago(null);
 
     try {
       const personalizacionStr = mostrarPersonalizacion
-        ? `Personalizada: ${texto || 'Sin texto'} | Imagen: ${imageFile ? 'Sí' : 'No'}`
-        : `Diseño Estándar: ${disenoSeleccionado?.nombre || 'No seleccionado'}`;
+        ? `TIPO: Personalizado (A mi gusto) | TEXTO: ${texto || 'Sin texto'} | IMAGEN: ${imageFile ? 'Sí' : 'No'}`
+        : `TIPO: Catálogo SparkUp | DISEÑO: ${disenoSeleccionado?.nombre || 'No seleccionado'}`;
 
-      const orderData = {
+      const orderPayload = {
+        id: producto.id,
+        nombre: `${producto.nombre} ${estiloSeleccionado ? `(${estiloSeleccionado})` : ''}`,
+        cantidad: cantidad,
+        precio: getPrecioUnitario(),
+        email: emailCliente,
         from_name: nombreCliente,
-        customer_email: emailCliente,
         address: ubicacion,
-        product: `${producto.nombre} ${estiloSeleccionado ? `(${estiloSeleccionado})` : ''}`,
-        quantity: cantidad,
-        color: (ocultarSelectorColor || !getColoresActuales().length) ? 'Definido por Diseño' : (colorSeleccionado?.nombre || 'N/A'),
-        size: tallaSeleccionada || 'N/A',
         order_details: personalizacionStr,
-        total_price: precioTotal.toLocaleString('es-CL'),
+        color: (ocultarSelectorColor || !getColoresActuales().length) ? 'Base del diseño' : (colorSeleccionado?.nombre || 'N/A'),
+        size: tallaSeleccionada || 'N/A',
         is_wholesale: esMayorista ? 'SÍ' : 'NO'
       };
 
-      localStorage.setItem('pending_sparkup_order', JSON.stringify(orderData));
+      // Guardamos TODO el objeto en el localStorage para recuperarlo después del pago
+      localStorage.setItem('pending_sparkup_order', JSON.stringify({
+        ...orderPayload,
+        total_price: precioTotal.toLocaleString('es-CL')
+      }));
 
       const response = await fetch('/api/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
+        body: JSON.stringify(orderPayload),
       });
 
       const data = await response.json();
+      
       if (data.id) {
         setPreferenceId(data.id);
         const mp = new window.MercadoPago(MP_PUBLIC_KEY, { locale: 'es-CL' });
-        mp.bricks().create("wallet", "wallet_container", { initialization: { preferenceId: data.id } });
+        mp.bricks().create("wallet", "wallet_container", { 
+          initialization: { preferenceId: data.id } 
+        });
+      } else {
+        throw new Error(data.error || "No se pudo crear la preferencia");
       }
     } catch (error) {
-      setErrorPago("Error al conectar con la pasarela.");
+      console.error(error);
+      setErrorPago("Error al conectar con la pasarela: " + error.message);
     } finally {
       setCargando(false);
     }
@@ -369,7 +381,6 @@ const Customizer = ({ producto, onBack }) => {
       </button>
 
       <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-        {/* LADO IZQUIERDO: PREVIEW DINÁMICA MEJORADA - SIN FONDO NI MARCA */}
         <div className={`p-6 rounded-[2.5rem] shadow-2xl border border-slate-100 md:sticky top-24 overflow-hidden transition-colors ${esRopa ? 'bg-white' : 'bg-[#f9f9f9]'}`}>
           <div className="relative aspect-square rounded-[2rem] overflow-hidden flex items-center justify-center">
             <img
@@ -378,12 +389,10 @@ const Customizer = ({ producto, onBack }) => {
               alt={producto.nombre}
               onError={handleImgError}
             />
-            {/* Overlay sutil para dar profundidad solo a prendas */}
             {esRopa && <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/[0.02]" />}
           </div>
         </div>
 
-        {/* LADO DERECHO: OPCIONES */}
         <div className="space-y-8">
           <div>
             <h1 className="text-4xl font-black text-slate-900 italic mb-2">{producto.nombre}</h1>
@@ -394,7 +403,6 @@ const Customizer = ({ producto, onBack }) => {
           </div>
 
           <div className="space-y-6">
-            {/* Se añade lógica para que la casilla de opciones solo aparezca si hay algo que configurar (estilos o catálogo) */}
             {producto.esPersonalizable && (producto.estilosDisponibles || tieneDisenosEstandar) && (
               <div className="space-y-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
                 {producto.estilosDisponibles && (
@@ -452,8 +460,8 @@ const Customizer = ({ producto, onBack }) => {
               {esRopa && (
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest flex justify-between">
-                     Talla Disponible
-                     {producto.esPolera && <span className="text-pink-400 font-black italic">{estiloSeleccionado}</span>}
+                      Talla Disponible
+                      {producto.esPolera && <span className="text-pink-400 font-black italic">{estiloSeleccionado}</span>}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {getTallasActuales().map(t => (
@@ -511,7 +519,7 @@ const Customizer = ({ producto, onBack }) => {
               <div id="wallet_container" className="min-h-[50px] rounded-xl overflow-hidden"></div>
               {!preferenceId && (
                 <button onClick={handleCreatePreference} disabled={cargando} className="w-full py-5 rounded-2xl font-black text-lg bg-pink-400 hover:bg-pink-500 transition-all shadow-xl shadow-pink-500/20">
-                  {cargando ? "Cargando..." : "Proceder al Pago"}
+                  {cargando ? "Generando Orden..." : "Ir a Pagar"}
                 </button>
               )}
             </div>
@@ -526,23 +534,84 @@ export default function App() {
   const [vista, setVista] = useState('home');
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [emailStatus, setEmailStatus] = useState('idle'); // idle, sending, sent, error
 
   useEffect(() => {
+    // 1. CARGAR SDK MERCADO PAGO
+    if (!document.getElementById('mp-sdk')) {
+      const scriptMP = document.createElement("script");
+      scriptMP.id = 'mp-sdk';
+      scriptMP.src = "https://sdk.mercadopago.com/js/v2";
+      scriptMP.async = true;
+      document.body.appendChild(scriptMP);
+    }
+
+    // 2. CARGAR SDK EMAILJS
+    if (!document.getElementById('emailjs-sdk')) {
+      const scriptEmail = document.createElement("script");
+      scriptEmail.id = 'emailjs-sdk';
+      scriptEmail.src = "https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
+      scriptEmail.async = true;
+      document.body.appendChild(scriptEmail);
+    }
+
+    // 3. VERIFICAR RETORNO DE PAGO Y ENVIAR EMAIL
     const params = new URLSearchParams(window.location.search);
-    if (params.get('status') === 'approved') {
+    // Mercado Pago envía parámetros diferentes dependiendo del dispositivo (status, collection_status, payment)
+    const paymentStatus = params.get('status') || params.get('payment') || params.get('collection_status');
+    
+    if (paymentStatus === 'approved' || paymentStatus === 'success') {
       const order = JSON.parse(localStorage.getItem('pending_sparkup_order'));
-      if (order && window.emailjs && EMAILJS_PUBLIC_KEY) {
+      
+      if (order) {
+        console.log("Detectado pedido pendiente. Iniciando proceso de notificación...");
         setShowSuccessModal(true);
-        window.emailjs.init(EMAILJS_PUBLIC_KEY);
-        window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          to_name: "Admin SparkUp",
-          from_name: order.from_name,
-          customer_email: order.customer_email,
-          address: order.address,
-          order_details: order.order_details,
-          total_price: order.total_price,
-          is_wholesale: order.is_wholesale
-        }).then(() => localStorage.removeItem('pending_sparkup_order'));
+        setEmailStatus('sending');
+
+        let intentos = 0;
+        const checkEmailJS = setInterval(() => {
+          intentos++;
+          if (window.emailjs && EMAILJS_PUBLIC_KEY) {
+            clearInterval(checkEmailJS);
+            
+            console.log("EmailJS cargado. Inicializando...");
+            window.emailjs.init(EMAILJS_PUBLIC_KEY);
+            
+            const templateParams = {
+              to_name: "Admin SparkUp",
+              from_name: order.from_name,
+              customer_email: order.email,
+              address: order.address,
+              order_details: `${order.nombre} | ${order.order_details} | COLOR: ${order.color} | TALLA: ${order.size}`,
+              total_price: order.total_price,
+              is_wholesale: order.is_wholesale
+            };
+
+            console.log("Enviando correo con parámetros:", templateParams);
+
+            window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+              .then((response) => {
+                console.log('✅ PEDIDO ENVIADO POR CORREO CON ÉXITO:', response.status, response.text);
+                setEmailStatus('sent');
+                localStorage.removeItem('pending_sparkup_order');
+                // Limpiamos los parámetros de la URL para evitar duplicados si recarga el navegador
+                window.history.replaceState({}, document.title, "/");
+              })
+              .catch((err) => {
+                console.error('❌ ERROR AL ENVIAR EMAILJS:', err);
+                setEmailStatus('error');
+              });
+          } else if (intentos > 20) {
+             // Dejar de intentar después de ~30 segundos si emailjs no carga
+             clearInterval(checkEmailJS);
+             console.error("No se pudo cargar EmailJS después de varios intentos.");
+             setEmailStatus('error');
+          } else {
+            console.log("Esperando a que EmailJS cargue...");
+          }
+        }, 1500);
+      } else {
+        console.log("No se encontró información del pedido en el almacenamiento local.");
       }
     }
   }, []);
@@ -550,16 +619,51 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FEFAEF] font-sans text-slate-900 selection:bg-pink-100">
       <Navbar onNavigate={setVista} vistaActiva={vista} />
+      
       {showSuccessModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[3rem] p-10 max-sm w-full text-center shadow-2xl animate-in zoom-in-95">
-            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle2 size={40} /></div>
-            <h3 className="text-2xl font-black italic mb-2 uppercase">¡Pago Exitoso!</h3>
-            <p className="text-slate-500 font-bold text-xs mb-8">Te enviaremos un correo con la confirmación y detalles del envío.</p>
-            <button onClick={() => { setShowSuccessModal(false); window.location.href = "/"; }} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest">Cerrar</button>
+          <div className="bg-white rounded-[3rem] p-10 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              {emailStatus === 'sending' ? (
+                <Loader2 size={40} className="animate-spin text-pink-500" />
+              ) : (
+                <CheckCircle2 size={40} />
+              )}
+            </div>
+            
+            <h3 className="text-2xl font-black italic mb-2 uppercase">
+              {emailStatus === 'sending' ? 'Procesando Pago' : '¡Pago Exitoso!'}
+            </h3>
+            
+            <div className="space-y-4 mb-8">
+              <p className="text-slate-500 font-bold text-xs">
+                {emailStatus === 'sending' ? (
+                  "Estamos enviando tu información al taller, no cierres esta ventana..."
+                ) : emailStatus === 'sent' ? (
+                  "¡Información enviada con éxito! Te enviaremos un correo con la confirmación y detalles del envío."
+                ) : emailStatus === 'error' ? (
+                  "Hubo un problema al enviar el correo, pero tu pago fue registrado. Contacta a soporte si no recibes noticias."
+                ) : (
+                  "Te enviaremos un correo con la confirmación y detalles del envío."
+                )}
+              </p>
+            </div>
+
+            <button 
+              onClick={() => { setShowSuccessModal(false); setVista('home'); }} 
+              disabled={emailStatus === 'sending'}
+              className={`w-full py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${
+                emailStatus === 'sending' 
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                : 'bg-slate-900 text-white hover:bg-pink-500 shadow-xl'
+              }`}
+            >
+              {emailStatus === 'sending' ? 'Espera un momento...' : 'Cerrar e ir al Inicio'}
+            </button>
           </div>
         </div>
       )}
+
       <main className="max-w-7xl mx-auto px-4 pt-32 pb-20">
         {vista === 'home' && (
           <div className="space-y-16 animate-in fade-in duration-700">
